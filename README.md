@@ -1,6 +1,6 @@
 
 This is a terrain generator that simulates terrain due to hydraulic erosion,
-mostly following the paper "Large-scale Terrain Authoring through Interactive Erosion Simulation" (https://doi.org/10.1145/3592787).
+mostly following the erosion simulation part of the paper "Large-scale Terrain Authoring through Interactive Erosion Simulation" (https://doi.org/10.1145/3592787).
 
 ![](images/teaser1.png) 
 
