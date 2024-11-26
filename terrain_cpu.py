@@ -30,9 +30,9 @@ if TERRAIN_OPTION == 0:
 
 elif TERRAIN_OPTION == 1: 
 
-    u_init = DS.diamond_square(shape=(N,N), min_height=(-0.8 * u_scale), max_height=u_scale, roughness=0.5) 
-    u = np.clip(u_init, 0., u_scale)
-    h = np.clip(u_init + 0.2 * u_scale, 0., u_scale) / u_scale * h_scale
+    u_init = DS.diamond_square(shape=(N,N), min_height=0., max_height=u_scale, roughness=0.5) 
+    u = np.clip(u_init, u_scale * 0.5, u_scale) - 0.5 * u_scale
+    h = (np.clip(u_init, u_scale * 0.5, u_scale) / u_scale - 0.25) * h_scale
 
 elif TERRAIN_OPTION == 2:
 
