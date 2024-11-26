@@ -1,4 +1,4 @@
-
+import sys
 import math
 import numpy as np
 import skimage
@@ -18,10 +18,26 @@ num_frames = 100 # Number of frames
 h_scale = 1. 
 u_scale = 0.4 * h_scale / math.sqrt(N) 
 p = 4
-dt = 0.2
+dt = 0.1
 
-u = DS.diamond_square(shape=(N,N), min_height=0., max_height=u_scale, roughness=0.4) 
-h = DS.diamond_square(shape=(N,N), min_height=0., max_height=h_scale, roughness=0.6)
+TERRAIN_OPTION = int(sys.argv[1]) if len(sys.argv) > 1 else 0
+
+if TERRAIN_OPTION == 0: 
+
+    u = DS.diamond_square(shape=(N,N), min_height=0., max_height=u_scale, roughness=0.4) 
+    h = DS.diamond_square(shape=(N,N), min_height=0., max_height=h_scale, roughness=0.6)
+    num_frames = 5000
+
+elif TERRAIN_OPTION == 1: 
+
+    u_init = DS.diamond_square(shape=(N,N), min_height=(-0.8 * u_scale), max_height=u_scale, roughness=0.5) 
+    u = np.clip(u_init, 0., u_scale)
+    h = np.clip(u_init + 0.2 * u_scale, 0., u_scale) / u_scale * h_scale
+
+elif TERRAIN_OPTION == 2:
+
+    u = DS.diamond_square(shape=(N,N), min_height=0., max_height=u_scale, roughness=0.7) 
+    h = np.copy(u) / u_scale * h_scale
 
 print_image("out/uplift.png", u, normalize=True)
 
@@ -87,14 +103,18 @@ for t in range(num_frames):
             #h_new[i,j] = max(h[i,j] + dt * (u[i,j] - math.sqrt(a[i,j]) * slope(h, xlow, ylow, i, j)), 0.0)
     #h = h_new
 
-print_image("out/final.png", h)
+print_image("out/%d.png" % num_frames, h)
 
-xs = np.linspace(0, N, N)
-ys = np.linspace(0, N, N)
+xscale = 5 * h_scale
+xs = np.linspace(0, xscale, N)
+ys = np.linspace(0, xscale, N)
 xs, ys = np.meshgrid(xs, ys)
-grid = pv.StructuredGrid(xs, ys, (h / h_scale * N * 0.2))
+grid = pv.StructuredGrid(xs, ys, h)
+plotter = pv.Plotter(off_screen=True)
+plotter.add_mesh(grid, scalars=grid.points[:, -1], cmap='gist_earth')
+plotter.camera_position = 'xy'
+plotter.screenshot("out/final.png", scale=2)
 plotter = pv.Plotter()
 plotter.add_mesh(grid, scalars=grid.points[:, -1], cmap='gist_earth')
-plotter.show_grid()
 plotter.show()
 

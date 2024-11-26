@@ -1,4 +1,4 @@
-
+import sys
 import math
 import numpy as np
 import pyvista as pv
@@ -8,17 +8,34 @@ import taichi as ti
 import taichi.math as tm
 
 N = 1024 # Size of image
-num_frames = 5000 # Number of frames
+num_frames = 3000 # Number of frames
 
 h_scale = 1. 
 u_scale = 0.4 * h_scale / math.sqrt(N) 
 p = 4
 dt = 0.003
 
-u_host = DS.diamond_square(shape=(N,N), min_height=0., max_height=u_scale, roughness=0.4) 
-h_host = DS.diamond_square(shape=(N,N), min_height=0., max_height=h_scale, roughness=0.6)
+TERRAIN_OPTION = int(sys.argv[1]) if len(sys.argv) > 1 else 0
 
-ti.init()
+if TERRAIN_OPTION == 0: 
+
+    u_host = DS.diamond_square(shape=(N,N), min_height=0., max_height=u_scale, roughness=0.4) 
+    h_host = DS.diamond_square(shape=(N,N), min_height=0., max_height=h_scale, roughness=0.6)
+    num_frames = 5000
+
+elif TERRAIN_OPTION == 1: 
+
+    u_init = DS.diamond_square(shape=(N,N), min_height=(-0.8 * u_scale), max_height=u_scale, roughness=0.5) 
+    u_host = np.clip(u_init, 0., u_scale)
+    h_host = np.clip(u_init + 0.2 * u_scale, 0., u_scale) / u_scale * h_scale
+
+elif TERRAIN_OPTION == 2:
+
+    u_host = DS.diamond_square(shape=(N,N), min_height=0., max_height=u_scale, roughness=0.7) 
+    h_host = np.copy(u_host) / u_scale * h_scale
+
+
+ti.init(arch=ti.gpu)
 u = ti.field(dtype=ti.f32)
 h = ti.field(dtype=ti.f32)
 h_new = ti.field(dtype=ti.f32)
@@ -108,12 +125,16 @@ print("a min %f average %f max %f" % (np.min(a_host), np.mean(a_host), np.max(a_
 print("average lost %f" % np.mean(np.sqrt(a_host) * s_host))
 print("h min %f max %f" % (np.min(h_host), np.max(h_host)))
 
-xs = np.linspace(0, N, N)
-ys = np.linspace(0, N, N)
+xscale = 5 * h_scale
+xs = np.linspace(0, xscale, N)
+ys = np.linspace(0, xscale, N)
 xs, ys = np.meshgrid(xs, ys)
-grid = pv.StructuredGrid(xs, ys, (h_host / h_scale * N * 0.2))
+grid = pv.StructuredGrid(xs, ys, h_host)
+plotter = pv.Plotter(off_screen=True)
+plotter.add_mesh(grid, scalars=grid.points[:, -1], cmap='gist_earth')
+plotter.camera_position = 'xy'
+plotter.screenshot("out/final.png", scale=2)
 plotter = pv.Plotter()
 plotter.add_mesh(grid, scalars=grid.points[:, -1], cmap='gist_earth')
-plotter.show_grid()
 plotter.show()
 

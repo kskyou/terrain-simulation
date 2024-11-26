@@ -4,9 +4,8 @@ mostly following the erosion simulation part of the paper "Large-scale Terrain A
 
 Terrain option |  Example
 :-|:-------------------------:
-0 | ![](images/example0.png) 
-1 | ![](images/example1.png) 
-2 | ![](images/example2.png) 
+0 | ![](images/imp_smalltime.png) 
+1 | ![](images/imp_largetime.png) 
 
 
 The GPU code uses an explicit time integrator scheme and taichi's GUI. For stability it is sufficient to have dt < max sqrt(1/a) <= 1/N. 
